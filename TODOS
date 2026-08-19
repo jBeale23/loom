@@ -2,4 +2,4 @@
 2. Add a Dockerfile and/or conda environment to make dependency installation easier
 3. Add a test suite
 4. Add CI pipeline to automate formatting, linting, and testing
-5. Update README with sensible installation, usage, etc. information.
+5. Update README with sensible usage information.
