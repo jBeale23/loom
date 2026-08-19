@@ -149,6 +149,9 @@ main() {
 	# Thread limit used for alignment
 	thread_limit="1"
 
+	# Paralleism limit for processing of input files
+	parallelism="$(nproc --all)"
+
 	# Output and logging paths
 	output_dir="."
 	log_dir="${output_dir}/logs"
@@ -612,6 +615,68 @@ main() {
 			esac
 			shift 1
 			grep -qE -- "^[0-9]+$" "${memory_limit}" && [ "${memory_limit}" -ge 1 ] || throw "$(printf "ERROR: Invalid memory limit format -- '%s'. Please specify a positive integer value." "${memory_limit}")"
+		elif printf "%s" "${1}" | grep -q -E -- "^(-p)|(--p(a(r(a(l(l(e(l(i(s(m)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				parallelism="${1#"${leader}"}"
+				;;
+			-p | --parallelism)
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --parallelism is specified, an integer limit must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --parallelism is specified, an integer limit must be provided."
+					;;
+				*)
+					parallelism="${2}"
+					shift 1
+					;;
+				esac
+				;;
+			--parallelism*)
+				parallelism="${1#--parallelism}"
+				;;
+			--parallelis*)
+				parallelism="${1#--parallelis}"
+				;;
+			--paralleli*)
+				parallelism="${1#--paralleli}"
+				;;
+			--parallel*)
+				parallelism="${1#--parallel}"
+				;;
+			--paralle*)
+				parallelism="${1#--paralle}"
+				;;
+			--parall*)
+				parallelism="${1#--parall}"
+				;;
+			--paral*)
+				parallelism="${1#--paral}"
+				;;
+			--para*)
+				parallelism="${1#--para}"
+				;;
+			--par*)
+				parallelism="${1#--par}"
+				;;
+			--pa*)
+				parallelism="${1#--pa}"
+				;;
+			--p*)
+				parallelism="${1#--p}"
+				;;
+			-p*)
+				parallelism="${1#-p}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid parallelism format -- '%s'. Please specify a positive integer value." "${1}")"
+				;;
+			esac
+			shift 1
+			grep -qE -- "^[0-9]+$" "${parallelism}" && [ "${parallelism}" -ge 1 ] || throw "$(printf "ERROR: Invalid parallelism format -- '%s'. Please specify a positive integer value." "${parallelism}")"
 		elif [ "${1}" = "--" ]; then
 			shift 1
 			break
@@ -631,6 +696,10 @@ main() {
 
 	if [ -f "${1}" ]; then
 		process_fasta "${1}"
+	elif [ -d "${1}" ]; then
+		export process_fasta
+		export validate_input
+		find "${1}" -type f -name "*.fa*" -depth 1 -print0 | xargs -0 -n 1 -p "${parallelism}" -I "{}" sh -c "process_fasta {}"
 	else
 		throw "ERROR: An input file in FASTA format or directory thereof is required."
 	fi
