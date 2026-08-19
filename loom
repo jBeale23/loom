@@ -29,7 +29,9 @@ usage() {
 
 		Examples:
 		  ${_program_name} --memory-limit 2000 --thread-limit 24 --gap-threshold 0.3 -l 0.25 example.fasta --output-file consensus.fasta
+
 		  ${_program_name} --parallelism 32 --thread-limit 2 --output-file consensus_proteome.fasta --output-directory /data -- my_directory_of_fasta_files
+
 		  ${_program_name} -w "\$(mktemp -d)" -M 1000 -t 64 example.fasta --output-file consensus.fasta
 	EOF
 }
