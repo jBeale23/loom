@@ -118,21 +118,25 @@ process_fasta() {
 		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Length filtering %s." "${input_fasta}")"
 		length_filter --threshold "${length_threshold}" --input "${input_fasta}" --output "${length_filtered}" --log "${log_dir}/${fasta_stem}_consensus.log" && printf "%s\n" "${fasta_stem}" >>"${length_filtered_log}"
 	fi
+	grep -q -- "${fasta_stem}" "${length_filtered_log}" >/dev/null 2>&1 || throw "$(printf "ERROR: Failed to length filter input file: '%s'." "${input_fasta}")"
 
 	if ! grep -q -- "${fasta_stem}" "${clustered_log}" >/dev/null 2>&1; then
 		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Clustering %s." "${input_fasta}")"
 		cd-hit -i "${length_filtered}" -M "${memory_limit}" -o "${clustered}" >/dev/null 2>&1 && printf "%s\n" "${fasta_stem}" >>"${clustered_log}"
 	fi
+	grep -q -- "${fasta_stem}" "${clustered_log}" >/dev/null 2>&1 || throw "$(printf "ERROR: Failed to cluster input file: '%s'." "${input_fasta}")"
 
 	if ! grep -q -- "${fasta_stem}" "${aligned_log}" >/dev/null 2>&1; then
 		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Aligning %s." "${input_fasta}")"
 		mafft --quiet --auto "${clustered}" --thread "${thread_limit}" >"${aligned}" 2>/dev/null && printf "%s\n" "${fasta_stem}" >>"${aligned_log}"
 	fi
+	grep -q -- "${fasta_stem}" "${aligned_log}" >/dev/null 2>&1 || throw "$(printf "ERROR: Failed to align input file: '%s'." "${input_fasta}")"
 
 	if ! grep -q -- "${fasta_stem}" "${completed_log}" >/dev/null 2>&1; then
 		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Building consensus for %s." "${input_fasta}")"
 		build_consensus --threshold "${gap_threshold}" --input "${aligned}" --output "${output_fasta}" --log "${log_dir}/${fasta_stem}_consensus.log" && printf "%s\n" "${fasta_stem}" >>"${completed_log}"
 	fi
+	grep -q -- "${fasta_stem}" "${completed_log}" >/dev/null 2>&1 || throw "$(printf "ERROR: Failed to build consensus for input file: '%s'." "${input_fasta}")"
 
 	[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Completed consensus for %s." "${input_fasta}")"
 }
