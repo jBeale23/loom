@@ -13,6 +13,7 @@ This pipeline follows the methodology outlined in [Sternke et. al., 2019](https:
 3. cd-hit
 4. mafft
 5. gzip (If using .gz compressed input files)
+6. length_filter.py and build_consensus.py (Can be installed from this repository using `pip install .`
 
 Install the required dependencies, then clone the repository and run `sudo make install` to install `loom` and its completions for all users.
 
