@@ -43,3 +43,12 @@ version() {
 		There is NO WARRANTY, to the extent permitted by law.
 	EOF
 }
+
+log() {
+	printf "%s %s %s\n" "$(date +'%Y%M%D %H:%M:%S')" "${_program_name}" "${1}" >&2
+}
+
+throw() {
+	log "${1}"
+	exit 1
+}
