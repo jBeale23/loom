@@ -74,6 +74,13 @@ setup() {
 	touch "${completed_log}" || throw "ERROR: Unable to create completion log for consensus building."
 }
 
+decompress_input_file() {
+	command -v gzip >/dev/null 2>&1 || throw "ERROR: gzip must be installed to process gzipped input files."
+	gunzipped="${work_dir}/$(basename "${1%.fa*}").fasta"
+	gzip -dfck "${input_file}" >"${gunzipped}" || throw "$(printf "ERROR: Failed to decompress input file %s. Is it in gz format?" "${input_file}")"
+	printf "%s" "${gunzipped}"
+}
+
 validate_input() {
 	[ "${verbose}" -eq 1 ] && log "Validating input file."
 	input_file="${1}"
