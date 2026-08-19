@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+set -eu
+
+_program_name="$(basename "${0}")"
+
+usage() {
+	cat <<-EOF
+		Automatically designs a consensus protein from a FASTA file.
+
+		Usage: ${_program_name} [-h|V] | [-v] [-w[=| ]<WORK_DIR>] [-d[=| ]<OUTPUT_DIR>] [-o[=| ]<OUTPUT_FASTA>] [-t[=| ]<THREAD_LIMIT>] [-m[=| ]<MEMORY_LIMIT>] [-g[=| ]<GAP_THRESHOLD>] [-l[=| ]<LENGTH_THRESHOLD>] <INPUT_FASTA>
+
+		Options:
+		  -h, --help                                 Show this help message and exit.
+		  -V, --version                              Show version information and exit.
+		  -v, --verbose                              Enable debug logging.
+		  -w, --working-directory <WORK_DIR>         The directory in which to create completion logs and intermediary files.
+		  -d, --output-directory <OUTPUT_DIR>        The directory in which to output consensus proteins.
+		  -o, --output-file <OUTPUT_FASTA>           Output consensus protein filename. Defaults to <INPUT_FILE>_consensus.fasta
+		  -g, --gap-threshold <GAP_THRESHOLD>        Gap frequecy threshold used to define a consensus position. Defaults to 0.5, removing positions with higher gap frequency. Must be a value between 0 and 1.
+		  -l, --length-threshold <LENGTH_THRESHOLD>  Sequence length filtering threshold value. Defaults to 0.3, removing sequences that deviate +/- 30% from median sequence length of set. Must be a value between 0 and 1.
+		  -t, --thread-limit <THREAD_LIMIT>          The maximum number of threads to use for alignment. Defaults to 1.
+		  -m, --memory-limit <MEMORY_LIMIT>          The maximum amount of memory to use for clustering, in megabytes. Defaults to 2000.
+		  -p, --parallelism <PARALLELISM>            The maximum number of input files to process simultaneously, if receiving a directory as input. Defaults to the number of available CPU cores.
+		      --                                     Stop processing command line arguments.
+
+		Positional Arguments:
+		  <INPUT_FASTA>                              An input file in FASTA format, optionally compressed via gzip. Alternatively, a directory of such files.
+
+		Examples:
+		  ${_program_name} --memory-limit 2000 --thread-limit 24 --gap-threshold 0.3 -l 0.25 example.fasta --output-file consensus.fasta
+		  ${_program_name} --parallelism 32 --thread-limit 2 --output-file consensus_proteome.fasta --output-directory /data -- my_directory_of_fasta_files
+		  ${_program_name} -w "\$(mktemp -d)" -M 1000 -t 64 example.fasta --output-file consensus.fasta
+	EOF
+}
