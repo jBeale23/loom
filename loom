@@ -15,12 +15,12 @@ usage() {
 		  -V, --version                              Show version information and exit.
 		  -v, --verbose                              Enable debug logging.
 		  -w, --working-directory <WORK_DIR>         The directory in which to create completion logs and intermediary files.
-		  -d, --output-directory <OUTPUT_DIR>        The directory in which to output consensus proteins.
+		  -d, --output-directory <OUTPUT_DIR>        The directory in which to output consensus proteins. Defaults to ./output
 		  -o, --output-file <OUTPUT_FASTA>           Output consensus protein filename. Defaults to <INPUT_FILE>_consensus.fasta
 		  -g, --gap-threshold <GAP_THRESHOLD>        Gap frequecy threshold used to define a consensus position. Defaults to 0.5, removing positions with higher gap frequency. Must be a value between 0 and 1.
 		  -l, --length-threshold <LENGTH_THRESHOLD>  Sequence length filtering threshold value. Defaults to 0.3, removing sequences that deviate +/- 30% from median sequence length of set. Must be a value between 0 and 1.
 		  -t, --thread-limit <THREAD_LIMIT>          The maximum number of threads to use for alignment. Defaults to 1.
-		  -m, --memory-limit <MEMORY_LIMIT>          The maximum amount of memory to use for clustering, in megabytes. Defaults to 2000.
+		  -m, --memory-limit <MEMORY_LIMIT>          The maximum amount of memory to use for clustering, in megabytes. Defaults to 4000.
 		  -p, --parallelism <PARALLELISM>            The maximum number of input files to process simultaneously, if receiving a directory as input. Defaults to the number of available CPU cores.
 		      --                                     Stop processing command line arguments.
 
@@ -142,35 +142,6 @@ process_fasta() {
 }
 
 main() {
-	# Debug logging control, set to 1 to enable
-	verbose="0"
-
-	# Configuration of gap frequency and length thresholds
-	gap_threshold="0.5"
-	length_threshold="0.3"
-
-	# Memory limit used for clustering, in megabytes
-	memory_limit="2000"
-
-	# Thread limit used for alignment
-	thread_limit="1"
-
-	# Paralleism limit for processing of input files
-	parallelism="$(nproc --all)"
-
-	# Output and logging paths
-	output_dir="."
-	log_dir="${output_dir}/logs"
-	length_filtered_log="${log_dir}/length_filtered.log"
-	clustered_log="${log_dir}/clustered.log"
-	aligned_log="${log_dir}/aligned.log"
-	completed_log="${log_dir}/completed.log"
-
-	# Setting the working directory to "$(mktemp -d)" if it is backed by an in-memory
-	# tempfs will often yield better performance, but will substantially increase
-	# memory consumption and increase the difficulty of resuming an interrupted run.
-	work_dir="${output_dir}/work"
-
 	# Parse Options
 	while [ "${#}" -gt 0 ]; do
 		if printf "%s" "${1}" | grep -q -E -- "^(-h)|(--h(e(l(p)?)?)?)" 2>/dev/null; then
@@ -189,20 +160,6 @@ main() {
 			*=*)
 				leader="${1%%=*}="
 				work_dir="${1#"${leader}"}"
-				;;
-			-w | --work-directory)
-				if [ -z "${2}" ]; then
-					throw "ERROR: If --work-directory is specified, a work directory must be provided."
-				fi
-				case "${2}" in
-				-*)
-					throw "ERROR: If --work-directory is specified, a work directory must be provided."
-					;;
-				*)
-					work_dir="${2}"
-					shift 1
-					;;
-				esac
 				;;
 			--work-directory*)
 				work_dir="${1#--work-directory}"
@@ -253,26 +210,26 @@ main() {
 				throw "$(printf "ERROR: Invalid work directory format -- '%s'" "${1}")"
 				;;
 			esac
+			if [ -z "${work_dir}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --work-directory is specified, a work directory must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --work-directory is specified, a work directory must be provided."
+					;;
+				*)
+					work_dir="${2}"
+					shift 1
+					;;
+				esac
+			fi
 			shift 1
 		elif printf "%s" "${1}" | grep -q -E -- "^(-d)|(--output-d(i(r(e(c(t(o(r(y)?)?)?)?)?)?)?)" 2>/dev/null; then
 			case "${1}" in
 			*=*)
 				leader="${1%%=*}="
 				output_dir="${1#"${leader}"}"
-				;;
-			-d | --output-directory)
-				if [ -z "${2}" ]; then
-					throw "ERROR: If --output-directory is specified, an output directory must be provided."
-				fi
-				case "${2}" in
-				-*)
-					throw "ERROR: If --output-directory is specified, an output directory must be provided."
-					;;
-				*)
-					output_dir="${2}"
-					shift 1
-					;;
-				esac
 				;;
 			--output-directory*)
 				output_dir="${1#--output-directory}"
@@ -308,26 +265,26 @@ main() {
 				throw "$(printf "ERROR: Invalid output directory format -- '%s'" "${1}")"
 				;;
 			esac
+			if [ -z "${output_dir}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --output-directory is specified, an output directory must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --output-directory is specified, an output directory must be provided."
+					;;
+				*)
+					output_dir="${2}"
+					shift 1
+					;;
+				esac
+			fi
 			shift 1
 		elif printf "%s" "${1}" | grep -q -E -- "^(-o)|(--output-f(i(l(e)?)?)?)" 2>/dev/null; then
 			case "${1}" in
 			*=*)
 				leader="${1%%=*}="
 				output_fasta="${1#"${leader}"}"
-				;;
-			-o | --output-file)
-				if [ -z "${2}" ]; then
-					throw "ERROR: If --output-file is specified, an output file must be provided."
-				fi
-				case "${2}" in
-				-*)
-					throw "ERROR: If --output-file is specified, an output file must be provided."
-					;;
-				*)
-					output_fasta="${2}"
-					shift 1
-					;;
-				esac
 				;;
 			--output-file*)
 				output_fasta="${1#--output-file}"
@@ -348,26 +305,26 @@ main() {
 				throw "$(printf "ERROR: Invalid output file format -- '%s'" "${1}")"
 				;;
 			esac
+			if [ -z "${output_fasta}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --output-file is specified, an output file must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --output-file is specified, an output file must be provided."
+					;;
+				*)
+					output_fasta="${2}"
+					shift 1
+					;;
+				esac
+			fi
 			shift 1
 		elif printf "%s" "${1}" | grep -q -E -- "^(-g)|(--g(a(p(-(t(h(r(e(s(h(o(l(d)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
 			case "${1}" in
 			*=*)
 				leader="${1%%=*}="
 				gap_threshold="${1#"${leader}"}"
-				;;
-			-g | --gap-threshold)
-				if [ -z "${2}" ]; then
-					throw "ERROR: If --gap-threshold is specified, a decimal threshold between 0 and 1 must be provided."
-				fi
-				case "${2}" in
-				-*)
-					throw "ERROR: If --gap-threshold is specified, a decimal threshold between 0 and 1 must be provided."
-					;;
-				*)
-					gap_threshold="${2}"
-					shift 1
-					;;
-				esac
 				;;
 			--gap-threshold*)
 				gap_threshold="${1#--gap-threshold}"
@@ -415,6 +372,20 @@ main() {
 				throw "$(printf "ERROR: Invalid gap threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${1}")"
 				;;
 			esac
+			if [ -z "${gap_threshold}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --gap-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --gap-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+					;;
+				*)
+					gap_threshold="${2}"
+					shift 1
+					;;
+				esac
+			fi
 			shift 1
 			awk -v number="${gap_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid gap threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${gap_threshold}")"
 		elif printf "%s" "${1}" | grep -q -E -- "^(-l)|(--l(e(n(g(t(h(-(t(h(r(e(s(h(o(l(d)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
@@ -422,20 +393,6 @@ main() {
 			*=*)
 				leader="${1%%=*}="
 				length_threshold="${1#"${leader}"}"
-				;;
-			-l | --length-threshold)
-				if [ -z "${2}" ]; then
-					throw "ERROR: If --length-threshold is specified, a decimal threshold between 0 and 1 must be provided."
-				fi
-				case "${2}" in
-				-*)
-					throw "ERROR: If --length-threshold is specified, a decimal threshold between 0 and 1 must be provided."
-					;;
-				*)
-					length_threshold="${2}"
-					shift 1
-					;;
-				esac
 				;;
 			--length-threshold*)
 				length_threshold="${1#--length-threshold}"
@@ -492,6 +449,20 @@ main() {
 				throw "$(printf "ERROR: Invalid length threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${1}")"
 				;;
 			esac
+			if [ -z "${length_threshold}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --length-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --length-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+					;;
+				*)
+					length_threshold="${2}"
+					shift 1
+					;;
+				esac
+			fi
 			shift 1
 			awk -v number="${length_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid length threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${length_threshold}")"
 		elif printf "%s" "${1}" | grep -q -E -- "^(-t)|(--t(h(r(e(a(d(-(l(i(m(i(t)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
@@ -499,20 +470,6 @@ main() {
 			*=*)
 				leader="${1%%=*}="
 				thread_limit="${1#"${leader}"}"
-				;;
-			-t | --thread-limit)
-				if [ -z "${2}" ]; then
-					throw "ERROR: If --thread-limit is specified, an integer limit must be provided."
-				fi
-				case "${2}" in
-				-*)
-					throw "ERROR: If --thread-limit is specified, an integer limit must be provided."
-					;;
-				*)
-					thread_limit="${2}"
-					shift 1
-					;;
-				esac
 				;;
 			--thread-limit*)
 				thread_limit="${1#--thread-limit}"
@@ -554,27 +511,27 @@ main() {
 				throw "$(printf "ERROR: Invalid thread limit format -- '%s'. Please specify a positive integer value." "${1}")"
 				;;
 			esac
+			if [ -z "${thread_limit}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --thread-limit is specified, an integer limit must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --thread-limit is specified, an integer limit must be provided."
+					;;
+				*)
+					thread_limit="${2}"
+					shift 1
+					;;
+				esac
+			fi
 			shift 1
-			grep -qE -- "^[0-9]+$" "${thread_limit}" && [ "${thread_limit}" -ge 1 ] || throw "$(printf "ERROR: Invalid thread limit format -- '%s'. Please specify a positive integer value." "${thread_limit}")"
+			awk -v number="${thread_limit}" 'END { exit !( number !~ /[^0-9]/ && number > 0) }' /dev/null || throw "$(printf "ERROR: Invalid thread limit format -- '%s'. Please specify a positive integer value." "${thread_limit}")"
 		elif printf "%s" "${1}" | grep -q -E -- "^(-m)|(--m(e(m(o(r(y(-(l(i(m(i(t)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
 			case "${1}" in
 			*=*)
 				leader="${1%%=*}="
 				memory_limit="${1#"${leader}"}"
-				;;
-			-m | --memory-limit)
-				if [ -z "${2}" ]; then
-					throw "ERROR: If --memory-limit is specified, an integer limit must be provided."
-				fi
-				case "${2}" in
-				-*)
-					throw "ERROR: If --memory-limit is specified, an integer limit must be provided."
-					;;
-				*)
-					memory_limit="${2}"
-					shift 1
-					;;
-				esac
 				;;
 			--memory-limit*)
 				memory_limit="${1#--memory-limit}"
@@ -619,27 +576,27 @@ main() {
 				throw "$(printf "ERROR: Invalid memory limit format -- '%s'. Please specify a positive integer value." "${1}")"
 				;;
 			esac
+			if [ -z "${memory_limit}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --memory-limit is specified, an integer limit must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --memory-limit is specified, an integer limit must be provided."
+					;;
+				*)
+					memory_limit="${2}"
+					shift 1
+					;;
+				esac
+			fi
 			shift 1
-			grep -qE -- "^[0-9]+$" "${memory_limit}" && [ "${memory_limit}" -ge 1 ] || throw "$(printf "ERROR: Invalid memory limit format -- '%s'. Please specify a positive integer value." "${memory_limit}")"
+			awk -v number="${memory_limit}" 'END { exit !( number !~ /[^0-9]/ && number > 0) }' /dev/null || throw "$(printf "ERROR: Invalid memory limit format -- '%s'. Please specify a positive integer value." "${memory_limit}")"
 		elif printf "%s" "${1}" | grep -q -E -- "^(-p)|(--p(a(r(a(l(l(e(l(i(s(m)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
 			case "${1}" in
 			*=*)
 				leader="${1%%=*}="
 				parallelism="${1#"${leader}"}"
-				;;
-			-p | --parallelism)
-				if [ -z "${2}" ]; then
-					throw "ERROR: If --parallelism is specified, an integer limit must be provided."
-				fi
-				case "${2}" in
-				-*)
-					throw "ERROR: If --parallelism is specified, an integer limit must be provided."
-					;;
-				*)
-					parallelism="${2}"
-					shift 1
-					;;
-				esac
 				;;
 			--parallelism*)
 				parallelism="${1#--parallelism}"
@@ -682,7 +639,22 @@ main() {
 				;;
 			esac
 			shift 1
-			grep -qE -- "^[0-9]+$" "${parallelism}" && [ "${parallelism}" -ge 1 ] || throw "$(printf "ERROR: Invalid parallelism format -- '%s'. Please specify a positive integer value." "${parallelism}")"
+			if [ -z "${parallelism}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --parallelism is specified, an integer limit must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --parallelism is specified, an integer limit must be provided."
+					;;
+				*)
+					parallelism="${2}"
+					shift 1
+					;;
+				esac
+			fi
+			shift 1
+			awk -v number="${parallelism}" 'END { exit !( number !~ /[^0-9]/ && number > 0) }' /dev/null || throw "$(printf "ERROR: Invalid parallelism format -- '%s'. Please specify a positive integer value." "${parallelism}")"
 		elif [ "${1}" = "--" ]; then
 			shift 1
 			break
@@ -696,6 +668,35 @@ main() {
 	if [ "${#}" -lt 1 ]; then
 		throw "ERROR: An input file in FASTA format or directory thereof is required."
 	fi
+
+	# Debug logging control, set to 1 to enable
+	verbose="${verbose:-0}"
+
+	# Configuration of gap frequency and length thresholds
+	gap_threshold="${gap_threshold:-0.5}"
+	length_threshold="${length_threshold:-0.3}"
+
+	# Determines how many FASTA files are processed simultaneously when receiving directory input
+	parallelism="${parallelism:-"$(nproc --all)"}"
+
+	# Determines memory limit in megabytes used during clustering
+	memory_limit="${memory_limit:-4000}"
+
+	# Determines the number of threads used during alignment
+	thread_limit="${thread_limit:-1}"
+
+	# Output and logging paths
+	output_dir="${output_dir:-output}"
+	log_dir="${output_dir}/logs"
+	length_filtered_log="${log_dir}/length_filtered.log"
+	clustered_log="${log_dir}/clustered.log"
+	aligned_log="${log_dir}/aligned.log"
+	completed_log="${log_dir}/completed.log"
+
+	# Setting the working directory to "$(mktemp -d)" if it is backed by an in-memory
+	# tempfs will often yield better performance, but will substantially increase
+	# memory consumption and increase the difficulty of resuming an interrupted run.
+	work_dir="${output_dir}/work"
 
 	# Perform dependency checks and setup directories
 	setup
