@@ -1,6 +1,6 @@
-1. Add a barebones README
-2. Add a Makefile to ease installation on POSIX systems
-3. Add Man pages and other how-to-use documentation
-4. Add a Dockerfile and/or conda environment to make dependency installation easier
-5. Add a test suite
-6. Add CI pipeline to automate formatting, linting, and testing
+1. Add a Makefile to ease installation on POSIX systems
+2. Add Man pages and other how-to-use documentation
+3. Add a Dockerfile and/or conda environment to make dependency installation easier
+4. Add a test suite
+5. Add CI pipeline to automate formatting, linting, and testing
+6. Update README with sensible installation, usage, etc. information.
