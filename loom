@@ -54,6 +54,7 @@ throw() {
 }
 
 validate_input() {
+	[ "${verbose}" -eq 1 ] && log "Validating input file."
 	input_file="${1}"
 
 	# Validate that the input file exists
@@ -70,3 +71,10 @@ validate_input() {
 
 	printf "%s" "${input_file}"
 }
+
+main() {
+	# Debug logging control, set to 1 to enable
+	verbose="0"
+}
+
+main "${@}"
