@@ -161,6 +161,470 @@ main() {
 	# tempfs will often yield better performance, but will substantially increase
 	# memory consumption and increase the difficulty of resuming an interrupted run.
 	work_dir="${output_dir}/work"
+
+	# Parse Options
+	while [ "${#}" -gt 0 ]; do
+		if printf "%s" "${1}" | grep -q -E -- "^(-h)|(--h(e(l(p)?)?)?)" 2>/dev/null; then
+			usage
+			shift 1
+			return 0
+		elif printf "%s" "${1}" | grep -q -E -- "^(-V)|(--vers(i(o(n)?)?)?)" 2>/dev/null; then
+			version
+			shift 1
+			return 0
+		elif printf "%s" "${1}" | grep -q -E -- "^(-v)|(--verb(o(s(e)?)?)?)" 2>/dev/null; then
+			verbose="1"
+			shift 1
+		elif printf "%s" "${1}" | grep -q -E -- "^(-w)|(--w(o(r(k(-(d(i(r(e(c(t(o(r(y)?)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				work_dir="${1#"${leader}"}"
+				;;
+			-w | --work-directory)
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --work-directory is specified, a work directory must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --work-directory is specified, a work directory must be provided."
+					;;
+				*)
+					work_dir="${2}"
+					shift 1
+					;;
+				esac
+				;;
+			--work-directory*)
+				work_dir="${1#--work-directory}"
+				;;
+			--work-director*)
+				work_dir="${1#--work-director}"
+				;;
+			--work-directo*)
+				work_dir="${1#--work-directo}"
+				;;
+			--work-direct*)
+				work_dir="${1#--work-direct}"
+				;;
+			--work-direc*)
+				work_dir="${1#--work-direc}"
+				;;
+			--work-dire*)
+				work_dir="${1#--work-dire}"
+				;;
+			--work-dir*)
+				work_dir="${1#--work-dir}"
+				;;
+			--work-di*)
+				work_dir="${1#--work-di}"
+				;;
+			--work-d*)
+				work_dir="${1#--work-d}"
+				;;
+			--work-*)
+				work_dir="${1#--work-}"
+				;;
+			--work*)
+				work_dir="${1#--work}"
+				;;
+			--wor*)
+				work_dir="${1#--wor}"
+				;;
+			--wo*)
+				work_dir="${1#--wo}"
+				;;
+			--w*)
+				work_dir="${1#--w}"
+				;;
+			-w*)
+				work_dir="${1#-w}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid work directory format -- '%s'" "${1}")"
+				;;
+			esac
+			shift 1
+		elif printf "%s" "${1}" | grep -q -E -- "^(-d)|(--output-d(i(r(e(c(t(o(r(y)?)?)?)?)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				output_dir="${1#"${leader}"}"
+				;;
+			-d | --output-directory)
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --output-directory is specified, an output directory must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --output-directory is specified, an output directory must be provided."
+					;;
+				*)
+					output_dir="${2}"
+					shift 1
+					;;
+				esac
+				;;
+			--output-directory*)
+				output_dir="${1#--output-directory}"
+				;;
+			--output-director*)
+				output_dir="${1#--output-director}"
+				;;
+			--output-directo*)
+				output_dir="${1#--output-directo}"
+				;;
+			--output-direct*)
+				output_dir="${1#--output-direct}"
+				;;
+			--output-direc*)
+				output_dir="${1#--output-direc}"
+				;;
+			--output-dire*)
+				output_dir="${1#--output-dire}"
+				;;
+			--output-dir*)
+				output_dir="${1#--output-dir}"
+				;;
+			--output-di*)
+				output_dir="${1#--output-di}"
+				;;
+			--output-d*)
+				output_dir="${1#--output-d}"
+				;;
+			-d*)
+				output_dir="${1#-d}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid output directory format -- '%s'" "${1}")"
+				;;
+			esac
+			shift 1
+		elif printf "%s" "${1}" | grep -q -E -- "^(-o)|(--output-f(i(l(e)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				output_fasta="${1#"${leader}"}"
+				;;
+			-o | --output-file)
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --output-file is specified, an output file must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --output-file is specified, an output file must be provided."
+					;;
+				*)
+					output_fasta="${2}"
+					shift 1
+					;;
+				esac
+				;;
+			--output-file*)
+				output_fasta="${1#--output-file}"
+				;;
+			--output-fil*)
+				output_fasta="${1#--output-fil}"
+				;;
+			--output-fi*)
+				output_fasta="${1#--output-fi}"
+				;;
+			--output-f*)
+				output_fasta="${1#--output-f}"
+				;;
+			-o*)
+				output_fasta="${1#-o}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid output file format -- '%s'" "${1}")"
+				;;
+			esac
+			shift 1
+		elif printf "%s" "${1}" | grep -q -E -- "^(-g)|(--g(a(p(-(t(h(r(e(s(h(o(l(d)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				gap_threshold="${1#"${leader}"}"
+				;;
+			-g | --gap-threshold)
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --gap-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --gap-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+					;;
+				*)
+					gap_threshold="${2}"
+					shift 1
+					;;
+				esac
+				;;
+			--gap-threshold*)
+				gap_threshold="${1#--gap-threshold}"
+				;;
+			--gap-threshol*)
+				gap_threshold="${1#--gap-threshol}"
+				;;
+			--gap-thresho*)
+				gap_threshold="${1#--gap-thresho}"
+				;;
+			--gap-thresh*)
+				gap_threshold="${1#--gap-thresh}"
+				;;
+			--gap-thres*)
+				gap_threshold="${1#--gap-thres}"
+				;;
+			--gap-thre*)
+				gap_threshold="${1#--gap-thre}"
+				;;
+			--gap-thr*)
+				gap_threshold="${1#--gap-thr}"
+				;;
+			--gap-th*)
+				gap_threshold="${1#--gap-th}"
+				;;
+			--gap-t*)
+				gap_threshold="${1#--gap-t}"
+				;;
+			--gap-*)
+				gap_threshold="${1#--gap-}"
+				;;
+			--gap*)
+				gap_threshold="${1#--gap}"
+				;;
+			--ga*)
+				gap_threshold="${1#--ga}"
+				;;
+			--g*)
+				gap_threshold="${1#--g}"
+				;;
+			-g*)
+				gap_threshold="${1#-g}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid gap threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${1}")"
+				;;
+			esac
+			shift 1
+			awk -v number="${gap_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid gap threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${gap_threshold}")"
+		elif printf "%s" "${1}" | grep -q -E -- "^(-l)|(--l(e(n(g(t(h(-(t(h(r(e(s(h(o(l(d)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				length_threshold="${1#"${leader}"}"
+				;;
+			-l | --length-threshold)
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --length-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --length-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+					;;
+				*)
+					length_threshold="${2}"
+					shift 1
+					;;
+				esac
+				;;
+			--length-threshold*)
+				length_threshold="${1#--length-threshold}"
+				;;
+			--length-threshol*)
+				length_threshold="${1#--length-threshol}"
+				;;
+			--length-thresho*)
+				length_threshold="${1#--length-thresho}"
+				;;
+			--length-thresh*)
+				length_threshold="${1#--length-thresh}"
+				;;
+			--length-thres*)
+				length_threshold="${1#--length-thres}"
+				;;
+			--length-thre*)
+				length_threshold="${1#--length-thre}"
+				;;
+			--length-thr*)
+				length_threshold="${1#--length-thr}"
+				;;
+			--length-th*)
+				length_threshold="${1#--length-th}"
+				;;
+			--length-t*)
+				length_threshold="${1#--length-t}"
+				;;
+			--length-*)
+				length_threshold="${1#--length-}"
+				;;
+			--length*)
+				length_threshold="${1#--length}"
+				;;
+			--lengt*)
+				length_threshold="${1#--lengt}"
+				;;
+			--leng*)
+				length_threshold="${1#--leng}"
+				;;
+			--len*)
+				length_threshold="${1#--len}"
+				;;
+			--le*)
+				length_threshold="${1#--le}"
+				;;
+			--l*)
+				length_threshold="${1#--l}"
+				;;
+			-l*)
+				length_threshold="${1#-l}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid length threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${1}")"
+				;;
+			esac
+			shift 1
+			awk -v number="${length_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid length threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${length_threshold}")"
+		elif printf "%s" "${1}" | grep -q -E -- "^(-t)|(--t(h(r(e(a(d(-(l(i(m(i(t)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				thread_limit="${1#"${leader}"}"
+				;;
+			-t | --thread-limit)
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --thread-limit is specified, an integer limit must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --thread-limit is specified, an integer limit must be provided."
+					;;
+				*)
+					thread_limit="${2}"
+					shift 1
+					;;
+				esac
+				;;
+			--thread-limit*)
+				thread_limit="${1#--thread-limit}"
+				;;
+			--thread-limi*)
+				thread_limit="${1#--thread-limi}"
+				;;
+			--thread-lim*)
+				thread_limit="${1#--thread-lim}"
+				;;
+			--thread-li*)
+				thread_limit="${1#--thread-li}"
+				;;
+			--thread-l*)
+				thread_limit="${1#--thread-l}"
+				;;
+			--thread-*)
+				thread_limit="${1#--thread-}"
+				;;
+			--thread*)
+				thread_limit="${1#--thread}"
+				;;
+			--thre*)
+				thread_limit="${1#--thre}"
+				;;
+			--thr*)
+				thread_limit="${1#--thr}"
+				;;
+			--th*)
+				thread_limit="${1#--th}"
+				;;
+			--t*)
+				thread_limit="${1#--t}"
+				;;
+			-t*)
+				thread_limit="${1#-t}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid thread limit format -- '%s'. Please specify a positive integer value." "${1}")"
+				;;
+			esac
+			shift 1
+			grep -qE -- "^[0-9]+$" "${thread_limit}" && [ "${thread_limit}" -ge 1 ] || throw "$(printf "ERROR: Invalid thread limit format -- '%s'. Please specify a positive integer value." "${thread_limit}")"
+		elif printf "%s" "${1}" | grep -q -E -- "^(-m)|(--m(e(m(o(r(y(-(l(i(m(i(t)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				memory_limit="${1#"${leader}"}"
+				;;
+			-m | --memory-limit)
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --memory-limit is specified, an integer limit must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --memory-limit is specified, an integer limit must be provided."
+					;;
+				*)
+					memory_limit="${2}"
+					shift 1
+					;;
+				esac
+				;;
+			--memory-limit*)
+				memory_limit="${1#--memory-limit}"
+				;;
+			--memory-limi*)
+				memory_limit="${1#--memory-limi}"
+				;;
+			--memory-lim*)
+				memory_limit="${1#--memory-lim}"
+				;;
+			--memory-li*)
+				memory_limit="${1#--memory-li}"
+				;;
+			--memory-l*)
+				memory_limit="${1#--memory-l}"
+				;;
+			--memory-*)
+				memory_limit="${1#--memory-}"
+				;;
+			--memory*)
+				memory_limit="${1#--memory}"
+				;;
+			--memor*)
+				memory_limit="${1#--memor}"
+				;;
+			--memo*)
+				memory_limit="${1#--memo}"
+				;;
+			--mem*)
+				memory_limit="${1#--mem}"
+				;;
+			--me*)
+				memory_limit="${1#--me}"
+				;;
+			--m*)
+				memory_limit="${1#--m}"
+				;;
+			-m*)
+				memory_limit="${1#-m}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid memory limit format -- '%s'. Please specify a positive integer value." "${1}")"
+				;;
+			esac
+			shift 1
+			grep -qE -- "^[0-9]+$" "${memory_limit}" && [ "${memory_limit}" -ge 1 ] || throw "$(printf "ERROR: Invalid memory limit format -- '%s'. Please specify a positive integer value." "${memory_limit}")"
+		elif [ "${1}" = "--" ]; then
+			shift 1
+			break
+		elif printf "%s" "${1}" | grep -q -E -- "^-.*" 2>/dev/null; then
+			throw "$(printf "ERROR: invalid option -- '%s'" "${1}")"
+		else
+			break
+		fi
+	done
+
+	if [ "${#}" -lt 1 ]; then
+		throw "ERROR: An input file in FASTA format or directory thereof is required."
+	fi
 }
 
 main "${@}"
