@@ -52,3 +52,21 @@ throw() {
 	log "${1}"
 	exit 1
 }
+
+validate_input() {
+	input_file="${1}"
+
+	# Validate that the input file exists
+	[ -f "${input_file}" ] || throw "$(printf "ERROR: Input file %s does not exist." "${input_file}")"
+
+	# Decompress any valid .gz, .Z, or .tar.gz file
+	if printf "%s\n" "${input_file}" | grep -qE -- "([\.\-][gG][zZ])|([\.\-_][zZ])|([\.\-][tT][aAgG][zZ])|" >/dev/null 2>&1; then
+		input_file="$(decompress_input_file "${input_file}")"
+	fi
+
+	# Validate that the input file is in fasta format and contains at least one sequence
+	grep -qE -- "^>" "${input_file}" || throw "$(printf "ERROR: Input file %s is not in FASTA format." "${input_file}")"
+	grep -qE -- "^[^>]" "${input_file}" || throw "$(printf "ERROR: Input FASTA %s file contains no sequences." "${input_file}")"
+
+	printf "%s" "${input_file}"
+}
