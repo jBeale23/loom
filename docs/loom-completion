@@ -1,0 +1,74 @@
+_generate_loom_completions() {
+  local idx=$1
+  shift
+  local words=("$@")
+  local current_word=${words[idx]}
+
+  local array=(
+    "--help: Show this help message and exit."
+    "-h: Show this help message and exit."
+    "--version: Show version information and exit."
+    "-V: Show version information and exit."
+    "--verbose: Enable debug logging."
+    "-v: Enable debug logging."
+    "--working-directory: The directory in which to create completion logs and intermediary files."
+    "-w: The directory in which to create completion logs and intermediary files."
+    "--output-directory: The directory in which to output consensus proteins."
+    "-d: The directory in which to output consensus proteins."
+    "--output-file: Output consensus protein filename."
+    "-o: Output consensus protein filename."
+    "--gap-threshold: Gap frequecy threshold used to define a consensus position."
+    "-g: Gap frequecy threshold used to define a consensus position."
+    "--length-threshold: Sequence length filtering threshold value."
+    "-l: Sequence length filtering threshold value."
+    "--thread-limit: The maximum number of threads to use for alignment."
+    "-t: The maximum number of threads to use for alignment."
+    "--memory-limit: The maximum amount of memory to use for clustering, in megabytes."
+    "-m: The maximum amount of memory to use for clustering, in megabytes."
+    "--parallelism: The maximum number of input files to process simultaneously, if receiving a directory as input."
+    "-p: The maximum number of input files to process simultaneously, if receiving a directory as input."
+    "--: Stop processing command line arguments."
+  )
+  for elem in "${array[@]}"; do
+    if [[ ${elem} == "${current_word}"* ]]; then printf "%s\n" "${elem}"; fi
+  done
+}
+
+_complete_loom_bash() {
+  local IFS=$'\n'
+  local raw=($(_generate_loom_completions "${COMP_CWORD}" "${COMP_WORDS[@]}"))
+  local trimmed=()
+  trimmed+=("${raw[@]}")
+
+  if ((${#raw[@]} == 1)); then
+    trimmed+=("${raw[0]%%:*}")
+  fi
+
+  COMPREPLY=("${trimmed[@]}")
+}
+
+_complete_loom_zsh() {
+  local -a raw trimmed
+  local IFS=$'\n'
+  raw=($(_generate_loom_completions "${CURRENT}" "${words[@]}"))
+
+  for arg in "${raw[@]}"; do trimmed+=("${arg%%:*}"); done
+  if ((${#raw} == 1)); then
+    trimmed+=("${raw[1]}")
+    raw+=("${trimmed[1]}")
+  fi
+
+  compadd -d raw -- "${trimmed[@]}"
+}
+
+if [[ -n "${ZSH_VERSION:-}" ]]; then
+  autoload -Uz compinit
+  compinit
+  compdef _complete_loom_zsh inline-checksum
+elif [[ -n "${BASH_VERSION:-}" ]]; then
+  complete -F _complete_loom_bash inline-checksum
+else
+  printf "Tab Completion for your shell is not currently supported\nOpen an issue on Loom's GitHub or submit a pull request with a patch.\n" >&2
+fi
+
+# vim: set filetype=sh:
