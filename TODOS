@@ -1,0 +1,5 @@
+1. Add a barebones README
+2. Add a Makefile to ease installation on POSIX systems
+3. Add Man pages and other how-to-use documentation
+4. Add a Dockerfile and/or conda environment to make dependency installation easier
+5. Add a test suite
