@@ -100,9 +100,55 @@ validate_input() {
 	printf "%s" "${input_file}"
 }
 
+process_fasta() {
+	# Validate that the input file is in fasta format and decompress it if necessary
+	input_fasta="$(validate_input "${1}")"
+
+	# Generate fasta stem for logging and paths for intermediary files
+	fasta_stem="$(basename "${1%.fa*}")"
+	output_fasta="${output_dir}/${output_fasta:-"${fasta_stem}.consensus"}"
+	length_filtered="${work_dir}/${fasta_stem}.lf"
+	clustered="${work_dir}/${fasta_stem}.cl"
+	aligned="${work_dir}/${fasta_stem}.al"
+
+	# Run loom pipeline, skipping already completed steps
+	if ! grep -q -- "${fasta_stem}" "${length_filtered_log}" >/dev/null 2>&1; then
+		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Length filtering %s." "${input_fasta}")"
+		length_filter --threshold "${length_threshold}" --input "${input_fasta}" --output "${length_filtered}" --log "${log_dir}/${fasta_stem}_consensus.log" && printf "%s\n" "${fasta_stem}" >>"${length_filtered_log}"
+	fi
+
+	if ! grep -q -- "${fasta_stem}" "${clustered_log}" >/dev/null 2>&1; then
+		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Clustering %s." "${input_fasta}")"
+		cd-hit -i "${length_filtered}" -M "${memory_limit}" -o "${clustered}" >/dev/null 2>&1 && printf "%s\n" "${fasta_stem}" >>"${clustered_log}"
+	fi
+
+	if ! grep -q -- "${fasta_stem}" "${aligned_log}" >/dev/null 2>&1; then
+		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Aligning %s." "${input_fasta}")"
+		mafft --quiet --auto "${clustered}" --thread "${thread_limit}" >"${aligned}" 2>/dev/null && printf "%s\n" "${fasta_stem}" >>"${aligned_log}"
+	fi
+
+	if ! grep -q -- "${fasta_stem}" "${completed_log}" >/dev/null 2>&1; then
+		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Building consensus for %s." "${input_fasta}")"
+		build_consensus --threshold "${gap_threshold}" --input "${aligned}" --output "${output_fasta}" --log "${log_dir}/${fasta_stem}_consensus.log" && printf "%s\n" "${fasta_stem}" >>"${completed_log}"
+	fi
+
+	[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Completed consensus for %s." "${input_fasta}")"
+}
+
 main() {
 	# Debug logging control, set to 1 to enable
 	verbose="0"
+
+	# Configuration of gap frequency and length thresholds
+	gap_threshold="0.5"
+	length_threshold="0.3"
+
+	# Memory limit used for clustering, in megabytes
+	memory_limit="2000"
+
+	# Thread limit used for alignment
+	thread_limit="1"
+
 	# Output and logging paths
 	output_dir="."
 	log_dir="${output_dir}/logs"
