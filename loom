@@ -625,6 +625,15 @@ main() {
 	if [ "${#}" -lt 1 ]; then
 		throw "ERROR: An input file in FASTA format or directory thereof is required."
 	fi
+
+	# Perform dependency checks and setup directories
+	setup
+
+	if [ -f "${1}" ]; then
+		process_fasta "${1}"
+	else
+		throw "ERROR: An input file in FASTA format or directory thereof is required."
+	fi
 }
 
 main "${@}"
