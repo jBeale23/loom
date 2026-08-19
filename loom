@@ -53,6 +53,27 @@ throw() {
 	exit 1
 }
 
+setup() {
+	[ "${verbose}" -eq 1 ] && log "DEBUG: Checking dependencies."
+	command -v length_filter >/dev/null 2>&1 || throw "ERROR: Unable to find length_filter command."
+	command -v cd-hit >/dev/null 2>&1 || throw "ERROR: Unable to find cd-hit command."
+	command -v mafft >/dev/null 2>&1 || throw "ERROR: Unable to find mafft command."
+	command -v build_consensus >/dev/null 2>&1 || throw "ERROR: Unable to find build_consensus command."
+
+	[ "${verbose}" -eq 1 ] && log "DEBUG: Creating output directory."
+	mkdir -p "${output_dir}" || throw "ERROR: Unable to create output directory."
+
+	[ "${verbose}" -eq 1 ] && log "DEBUG: Creating working directory."
+	mkdir -p "${work_dir}" || throw "ERROR: Unable to create working directory."
+
+	[ "${verbose}" -eq 1 ] && log "DEBUG: Creating completion logs."
+	mkdir -p "${log_dir}" || throw "ERROR: Unable to create completion log directory."
+	touch "${length_filtered_log}" || throw "ERROR: Unable to create completion log for length filtering."
+	touch "${clustered_log}" || throw "ERROR: Unable to create completion log for clustering."
+	touch "${aligned_log}" || throw "ERROR: Unable to create completion log for alignments."
+	touch "${completed_log}" || throw "ERROR: Unable to create completion log for consensus building."
+}
+
 validate_input() {
 	[ "${verbose}" -eq 1 ] && log "Validating input file."
 	input_file="${1}"
@@ -75,6 +96,18 @@ validate_input() {
 main() {
 	# Debug logging control, set to 1 to enable
 	verbose="0"
+	# Output and logging paths
+	output_dir="."
+	log_dir="${output_dir}/logs"
+	length_filtered_log="${log_dir}/length_filtered.log"
+	clustered_log="${log_dir}/clustered.log"
+	aligned_log="${log_dir}/aligned.log"
+	completed_log="${log_dir}/completed.log"
+
+	# Setting the working directory to "$(mktemp -d)" if it is backed by an in-memory
+	# tempfs will often yield better performance, but will substantially increase
+	# memory consumption and increase the difficulty of resuming an interrupted run.
+	work_dir="${output_dir}/work"
 }
 
 main "${@}"
