@@ -703,9 +703,21 @@ main() {
 	if [ -f "${1}" ]; then
 		process_fasta "${1}"
 	elif [ -d "${1}" ]; then
-		export process_fasta
-		export validate_input
-		find "${1}" -type f -name "*.fa*" -depth 1 -print0 | xargs -0 -n 1 -p "${parallelism}" -I "{}" sh -c "process_fasta {}"
+		dispatched_jobs=""
+		find "${1}" -maxdepth 1 -type f -name "*.fa*" -print | while read -r fasta; do
+			while [ "$(printf "%s" "${dispatched_jobs}" | wc -w)" -ge "${parallelism}" ]; do
+				active_jobs=""
+				for job in $dispatched_jobs; do
+					if kill -0 "${job}" 2>/dev/null; then
+						active_jobs="${active_jobs} ${job}"
+					fi
+				done
+				dispatched_jobs="${active_jobs}"
+				sleep 1
+			done
+			process_fasta "${fasta}" &
+			dispatched_jobs="${dispatched_jobs} ${!}"
+		done
 	else
 		throw "ERROR: An input file in FASTA format or directory thereof is required."
 	fi
