@@ -117,7 +117,7 @@ process_fasta() {
 	# Run loom pipeline, skipping already completed steps
 	if ! grep -q -- "${fasta_stem}" "${length_filtered_log}" >/dev/null 2>&1; then
 		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Length filtering %s." "${input_fasta}")"
-		length_filter --threshold "${length_threshold}" --input "${input_fasta}" --output "${length_filtered}" --log "${log_dir}/${fasta_stem}_consensus.log" && printf "%s\n" "${fasta_stem}" >>"${length_filtered_log}"
+		length_filter --threshold "${length_threshold}" --input "${input_fasta}" --output "${length_filtered}" --log "${log_dir}/${fasta_stem}_lf.log" && printf "%s\n" "${fasta_stem}" >>"${length_filtered_log}"
 	fi
 	grep -q -- "${fasta_stem}" "${length_filtered_log}" >/dev/null 2>&1 || throw "$(printf "ERROR: Failed to length filter input file: '%s'." "${input_fasta}")"
 
