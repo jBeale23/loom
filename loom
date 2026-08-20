@@ -141,6 +141,12 @@ process_fasta() {
 	[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Completed consensus for %s." "${input_fasta}")"
 }
 
+cull_workers() {
+	for job in $dispatched_jobs; do
+		kill "${job}" 2>/dev/null
+	done
+}
+
 main() {
 	# Parse Options
 	while [ "${#}" -gt 0 ]; do
@@ -717,6 +723,7 @@ main() {
 			done
 			process_fasta "${fasta}" &
 			dispatched_jobs="${dispatched_jobs} ${!}"
+			trap 'cull_workers' EXIT HUP INT QUIT ABRT TERM # Culls worker processes if the main thread ends unexpectedly to prevent them from becoming zombies
 		done
 	else
 		throw "ERROR: An input file in FASTA format or directory thereof is required."
