@@ -17,7 +17,7 @@ usage() {
 		  -w, --working-directory <WORK_DIR>             The directory in which to create completion logs and intermediary files.
 		  -d, --output-directory <OUTPUT_DIR>            The directory in which to output consensus proteins. Defaults to ./output
 		  -o, --output-file <OUTPUT_FASTA>               Output consensus protein filename. Defaults to <INPUT_FILE>_consensus.fasta
-		  -i, --identity-threshold <IDENTITY_THRESHOLD>  Sequence identity threshold. Defaults to 0.9, removing sequences above this value during clustering.
+		  -i, --identity-threshold <IDENTITY_THRESHOLD>  Sequence identity threshold used to remove sequences during clustering. Defaults to 0.9.
 		  -g, --gap-threshold <GAP_THRESHOLD>            Gap frequecy threshold used to define a consensus position. Defaults to 0.5, removing positions with higher gap frequency. Must be a value between 0 and 1.
 		  -l, --length-threshold <LENGTH_THRESHOLD>      Sequence length filtering threshold value. Defaults to 0.3, removing sequences that deviate +/- 30% from median sequence length of set. Must be a value between 0 and 1.
 		  -t, --thread-limit <THREAD_LIMIT>              The maximum number of threads to use for alignment. Defaults to 1.

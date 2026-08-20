@@ -17,6 +17,8 @@ _generate_loom_completions() {
     "-d: The directory in which to output consensus proteins."
     "--output-file: Output consensus protein filename."
     "-o: Output consensus protein filename."
+    "--identity-threshold: Sequence identity threshold used to remove sequences during clustering."
+    "-i: Sequence identity threshold used to remove sequences during clustering."
     "--gap-threshold: Gap frequecy threshold used to define a consensus position."
     "-g: Gap frequecy threshold used to define a consensus position."
     "--length-threshold: Sequence length filtering threshold value."
