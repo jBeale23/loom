@@ -788,17 +788,13 @@ main() {
 
 	# Output and logging paths
 	output_dir="${output_dir:-output}"
-	log_dir="${output_dir}/logs"
+	work_dir="${output_dir}/work"
+	log_dir="${work_dir}/logs"
 	length_filtered_log="${log_dir}/length_filtered.log"
 	clustered_log="${log_dir}/clustered.log"
 	aligned_log="${log_dir}/aligned.log"
 	completed_log="${log_dir}/completed.log"
 	versions="${output_dir}/versions.yml"
-
-	# Setting the working directory to "$(mktemp -d)" if it is backed by an in-memory
-	# tempfs will often yield better performance, but will substantially increase
-	# memory consumption and increase the difficulty of resuming an interrupted run.
-	work_dir="${output_dir}/work"
 
 	# Perform dependency checks and setup directories
 	setup
