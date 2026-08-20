@@ -20,9 +20,9 @@ Install the required dependencies, then clone the repository and run `sudo make 
 Alternatively, put `loom` anywhere on your $PATH and make sure it's executable, and everything will function once the dependencies are installed.
 You can manually install tab completions for Bash and Zsh by sourcing the included `loom-completion` file in your corresponding shell rc file.
 
-# Usage
+The provided Dockerfile includes all necessary dependencies during its build process, and can be used as a standalone installation.
 
-Coming soon
+# Usage
 
 # Uninstallation
 
