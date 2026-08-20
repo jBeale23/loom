@@ -1,6 +1,6 @@
 # Loom
 
-A POSIX compliant pipeline for designing consensus proteins, automatically weaving them from input FASTA files.
+A POSIX shell proteomics pipeline for designing consensus proteins, automatically weaving them from input FASTA files.
 
 This pipeline follows the methodology outlined in [Sternke et. al., 2019](https://www.pnas.org/doi/full/10.1073/pnas.1816707116).
 
@@ -24,11 +24,43 @@ The provided Dockerfile includes all necessary dependencies during its build pro
 
 # Usage
 
+Once you have installed Loom, it can be invoked as simply as `loom <INPUT_FASTA_FILE>`, and it will automatically generate a consensus protein from the provided FASTA.
+
+By default it uses the following configuration:
+
+- Sequences which deviate from the median by more than 30% will be removed. (Configurable via -l)
+- Sequences above 90% identity will be removed during clustering. (Configurable via -i)
+- Sequence positions above 50% gap frequency will be remove from the consensus protein. (Configurable via -g)
+
+And the following performance configurations are also available:
+
+- Clustering via cd-hit allows up to 4 GB of memory per input file. (Configurable via -m)
+- Alignment via mafft uses one thread per input file. (Configurable via -t)
+- While processing an input directory, one input file will be processed in parallel for each available CPU. (Configurable via -p)
+
+The output file name (Configurable via -o), output directory (Configurable via -d), and working directory (Configurable via -w) are all also configurable. More information on the command line arguments can be found via `loom --help` or by reading the included Man page.
+
+## Resuming a Run
+
+If for any reason a run is interrupted, it can be resumed by providing the same input file or directory and the same working directory. Files will resume processing at the step where they left off.
+
+## Performance Considerations
+
+Clustering and aligning notably large input FASTA can be very memory and CPU intensive, and the pipeline as a whole generates many large intermediary files, meaning that a powerful workstation is often ideal when attempting to align many sequences simultaneously.
+
+Loom has been tested and developed on Ubuntu 26.04 Linux with 96 GB of RAM and an Intel Core i9 Ultra 275HX CPU. It is primarily designed with workstations and HPC environments in mind, but for smaller input workloads, a conventional laptop which supports a POSIX shell should be sufficient.
+
+In cases where memory is not a constraint, performance can often be improved by using a memory backed working directory, such as is provided by `mktemp -d` on a system where tempfs are backed by RAM.
+
 # Uninstallation
 
 If you installed with `sudo make install`, you can remove `loom` and its completions with `sudo make uninstall`.
 
 Alternatively, just delete `loom` and its completion files if you installed it manually.
+
+# Bug Reports and Feature Requests
+
+If you discover a bug or find an area where a feature is lacking, check the Github issues, and if one doesn't exist already, go ahead and open one.
 
 # License
 
