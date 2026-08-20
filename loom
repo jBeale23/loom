@@ -8,24 +8,25 @@ usage() {
 	cat <<-EOF
 		Automatically designs a consensus protein from a FASTA file.
 
-		Usage: ${_program_name} [-h|V] | [-v] [-w[=| ]<WORK_DIR>] [-d[=| ]<OUTPUT_DIR>] [-o[=| ]<OUTPUT_FASTA>] [-t[=| ]<THREAD_LIMIT>] [-m[=| ]<MEMORY_LIMIT>] [-g[=| ]<GAP_THRESHOLD>] [-l[=| ]<LENGTH_THRESHOLD>] <INPUT_FASTA>
+		Usage: ${_program_name} [-h|V] | [-v] [-w[=| ]<WORK_DIR>] [-d[=| ]<OUTPUT_DIR>] [-o[=| ]<OUTPUT_FASTA>] [-t[=| ]<THREAD_LIMIT>] [-m[=| ]<MEMORY_LIMIT>] [-i[=| ]<IDENTITY_THRESHOLD>] [-g[=| ]<GAP_THRESHOLD>] [-l[=| ]<LENGTH_THRESHOLD>] <INPUT_FASTA>
 
 		Options:
-		  -h, --help                                 Show this help message and exit.
-		  -V, --version                              Show version information and exit.
-		  -v, --verbose                              Enable debug logging.
-		  -w, --working-directory <WORK_DIR>         The directory in which to create completion logs and intermediary files.
-		  -d, --output-directory <OUTPUT_DIR>        The directory in which to output consensus proteins. Defaults to ./output
-		  -o, --output-file <OUTPUT_FASTA>           Output consensus protein filename. Defaults to <INPUT_FILE>_consensus.fasta
-		  -g, --gap-threshold <GAP_THRESHOLD>        Gap frequecy threshold used to define a consensus position. Defaults to 0.5, removing positions with higher gap frequency. Must be a value between 0 and 1.
-		  -l, --length-threshold <LENGTH_THRESHOLD>  Sequence length filtering threshold value. Defaults to 0.3, removing sequences that deviate +/- 30% from median sequence length of set. Must be a value between 0 and 1.
-		  -t, --thread-limit <THREAD_LIMIT>          The maximum number of threads to use for alignment. Defaults to 1.
-		  -m, --memory-limit <MEMORY_LIMIT>          The maximum amount of memory to use for clustering, in megabytes. Defaults to 4000.
-		  -p, --parallelism <PARALLELISM>            The maximum number of input files to process simultaneously, if receiving a directory as input. Defaults to the number of available CPU cores.
-		      --                                     Stop processing command line arguments.
+		  -h, --help                                     Show this help message and exit.
+		  -V, --version                                  Show version information and exit.
+		  -v, --verbose                                  Enable debug logging.
+		  -w, --working-directory <WORK_DIR>             The directory in which to create completion logs and intermediary files.
+		  -d, --output-directory <OUTPUT_DIR>            The directory in which to output consensus proteins. Defaults to ./output
+		  -o, --output-file <OUTPUT_FASTA>               Output consensus protein filename. Defaults to <INPUT_FILE>_consensus.fasta
+		  -i, --identity-threshold <IDENTITY_THRESHOLD>  Sequence identity threshold. Defaults to 0.9, removing sequences above this value during clustering.
+		  -g, --gap-threshold <GAP_THRESHOLD>            Gap frequecy threshold used to define a consensus position. Defaults to 0.5, removing positions with higher gap frequency. Must be a value between 0 and 1.
+		  -l, --length-threshold <LENGTH_THRESHOLD>      Sequence length filtering threshold value. Defaults to 0.3, removing sequences that deviate +/- 30% from median sequence length of set. Must be a value between 0 and 1.
+		  -t, --thread-limit <THREAD_LIMIT>              The maximum number of threads to use for alignment. Defaults to 1.
+		  -m, --memory-limit <MEMORY_LIMIT>              The maximum amount of memory to use for clustering, in megabytes. Defaults to 4000.
+		  -p, --parallelism <PARALLELISM>                The maximum number of input files to process simultaneously, if receiving a directory as input. Defaults to the number of available CPU cores.
+		      --                                         Stop processing command line arguments.
 
 		Positional Arguments:
-		  <INPUT_FASTA>                              An input file in FASTA format, optionally compressed via gzip. Alternatively, a directory of such files.
+		  <INPUT_FASTA>                                  An input file in FASTA format, optionally compressed via gzip. Alternatively, a directory of such files.
 
 		Examples:
 		  ${_program_name} --memory-limit 2000 --thread-limit 24 --gap-threshold 0.3 -l 0.25 example.fasta --output-file consensus.fasta
@@ -122,7 +123,7 @@ process_fasta() {
 
 	if ! grep -q -- "${fasta_stem}" "${clustered_log}" >/dev/null 2>&1; then
 		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Clustering %s." "${input_fasta}")"
-		cd-hit -i "${length_filtered}" -M "${memory_limit}" -o "${clustered}" >/dev/null 2>&1 && printf "%s\n" "${fasta_stem}" >>"${clustered_log}"
+		cd-hit -c "${identity_threshold}" -i "${length_filtered}" -M "${memory_limit}" -o "${clustered}" >/dev/null 2>&1 && printf "%s\n" "${fasta_stem}" >>"${clustered_log}"
 	fi
 	grep -q -- "${fasta_stem}" "${clustered_log}" >/dev/null 2>&1 || throw "$(printf "ERROR: Failed to cluster input file: '%s'." "${input_fasta}")"
 
@@ -326,6 +327,89 @@ main() {
 				esac
 			fi
 			shift 1
+		elif printf "%s" "${1}" | grep -q -E -- "^(-i)|(--i(d(e(n(t(i(t(y(-(t(h(r(e(s(h(o(l(d)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
+			case "${1}" in
+			*=*)
+				leader="${1%%=*}="
+				identity_threshold="${1#"${leader}"}"
+				;;
+			--identity-threshold*)
+				identity_threshold="${1#--identity-threshold}"
+				;;
+			--identity-threshol*)
+				identity_threshold="${1#--identity-threshol}"
+				;;
+			--identity-thresho*)
+				identity_threshold="${1#--identity-thresho}"
+				;;
+			--identity-thresh*)
+				identity_threshold="${1#--identity-thresh}"
+				;;
+			--identity-thres*)
+				identity_threshold="${1#--identity-thres}"
+				;;
+			--identity-thre*)
+				identity_threshold="${1#--identity-thre}"
+				;;
+			--identity-thr*)
+				identity_threshold="${1#--identity-thr}"
+				;;
+			--identity-th*)
+				identity_threshold="${1#--identity-th}"
+				;;
+			--identity-t*)
+				identity_threshold="${1#--identity-t}"
+				;;
+			--identity-*)
+				identity_threshold="${1#--identity-}"
+				;;
+			--identity*)
+				identity_threshold="${1#--identity}"
+				;;
+			--identit*)
+				identity_threshold="${1#--identit}"
+				;;
+			--identi*)
+				identity_threshold="${1#--identi}"
+				;;
+			--ident*)
+				identity_threshold="${1#--ident}"
+				;;
+			--iden*)
+				identity_threshold="${1#--iden}"
+				;;
+			--ide*)
+				identity_threshold="${1#--ide}"
+				;;
+			--id*)
+				identity_threshold="${1#--id}"
+				;;
+			--i*)
+				identity_threshold="${1#--i}"
+				;;
+			-i*)
+				identity_threshold="${1#-i}"
+				;;
+			*)
+				throw "$(printf "ERROR: Invalid identity threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${1}")"
+				;;
+			esac
+			if [ -z "${identity_threshold}" ]; then
+				if [ -z "${2}" ]; then
+					throw "ERROR: If --identity-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+				fi
+				case "${2}" in
+				-*)
+					throw "ERROR: If --identity-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+					;;
+				*)
+					identity_threshold="${2}"
+					shift 1
+					;;
+				esac
+			fi
+			shift 1
+			awk -v number="${identity_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid identity threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${identity_threshold}")"
 		elif printf "%s" "${1}" | grep -q -E -- "^(-g)|(--g(a(p(-(t(h(r(e(s(h(o(l(d)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
 			case "${1}" in
 			*=*)
@@ -677,7 +761,8 @@ main() {
 	# Debug logging control, set to 1 to enable
 	verbose="${verbose:-0}"
 
-	# Configuration of gap frequency and length thresholds
+	# Configuration of sequence identity, gap frequency, and length thresholds
+	identity_threshold="${identity_threshold:-0.9}"
 	gap_threshold="${gap_threshold:-0.5}"
 	length_threshold="${length_threshold:-0.3}"
 
