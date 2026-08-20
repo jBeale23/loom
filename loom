@@ -128,7 +128,7 @@ process_fasta() {
 
 	if ! grep -q -- "${fasta_stem}" "${aligned_log}" >/dev/null 2>&1; then
 		[ "${verbose}" -eq 1 ] && log "$(printf "DEBUG: Aligning %s." "${input_fasta}")"
-		mafft --quiet --auto "${clustered}" --thread "${thread_limit}" >"${aligned}" 2>/dev/null && printf "%s\n" "${fasta_stem}" >>"${aligned_log}"
+		mafft --quiet --auto --thread "${thread_limit}" "${clustered}" >"${aligned}" 2>/dev/null && printf "%s\n" "${fasta_stem}" >>"${aligned_log}"
 	fi
 	grep -q -- "${fasta_stem}" "${aligned_log}" >/dev/null 2>&1 || throw "$(printf "ERROR: Failed to align input file: '%s'." "${input_fasta}")"
 
