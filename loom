@@ -638,7 +638,6 @@ main() {
 				throw "$(printf "ERROR: Invalid parallelism format -- '%s'. Please specify a positive integer value." "${1}")"
 				;;
 			esac
-			shift 1
 			if [ -z "${parallelism}" ]; then
 				if [ -z "${2}" ]; then
 					throw "ERROR: If --parallelism is specified, an integer limit must be provided."
