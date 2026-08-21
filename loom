@@ -803,6 +803,7 @@ main() {
 		process_fasta "${1}"
 	elif [ -d "${1}" ]; then
 		dispatched_jobs=""
+		trap 'cull_workers' EXIT HUP INT QUIT ABRT TERM # Culls worker processes if the main thread ends unexpectedly to prevent them from becoming zombies
 		find "${1}" -maxdepth 1 -type f -name "*.fa*" -print | while read -r fasta; do
 			while [ "$(printf "%s" "${dispatched_jobs}" | wc -w)" -ge "${parallelism}" ]; do
 				active_jobs=""
@@ -816,7 +817,6 @@ main() {
 			done
 			process_fasta "${fasta}" &
 			dispatched_jobs="${dispatched_jobs} ${!}"
-			trap 'cull_workers' EXIT HUP INT QUIT ABRT TERM # Culls worker processes if the main thread ends unexpectedly to prevent them from becoming zombies
 		done
 		wait
 	else
