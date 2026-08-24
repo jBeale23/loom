@@ -30,7 +30,7 @@ By default it uses the following configuration:
 
 - Sequences which deviate from the median by more than 30% will be removed. (Configurable via -l)
 - Sequences above 90% identity will be removed during clustering. (Configurable via -i)
-- Sequence positions above 50% gap frequency will be remove from the consensus protein. (Configurable via -g)
+- Sequence positions above 50% gap frequency will be removed from the consensus protein. (Configurable via -g)
 
 And the following performance configurations are also available:
 
