@@ -318,6 +318,35 @@ main() {
 				fi
 				awk -v number="${gap_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid gap threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${gap_threshold}")"
 				;;
+			-vl*)
+				case "${1}" in
+				*=*)
+					leader="${1%%=*}="
+					length_threshold="${1#"${leader}"}"
+					;;
+				-vl*)
+					length_threshold="${1#-vl}"
+					;;
+				*)
+					throw "$(printf "ERROR: Invalid length threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${1}")"
+					;;
+				esac
+				if [ -z "${length_threshold}" ]; then
+					if [ -z "${2}" ]; then
+						throw "ERROR: If --length-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+					fi
+					case "${2}" in
+					-*)
+						throw "ERROR: If --length-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+						;;
+					*)
+						length_threshold="${2}"
+						shift 1
+						;;
+					esac
+				fi
+				awk -v number="${length_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid length threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${length_threshold}")"
+				;;
 			*)
 				;;
 			esac
