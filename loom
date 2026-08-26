@@ -376,6 +376,35 @@ main() {
 				fi
 				awk -v number="${thread_limit}" 'END { exit !( number !~ /[^0-9]/ && number > 0) }' /dev/null || throw "$(printf "ERROR: Invalid thread limit format -- '%s'. Please specify a positive integer value." "${thread_limit}")"
 				;;
+			-vm*)
+				case "${1}" in
+				*=*)
+					leader="${1%%=*}="
+					memory_limit="${1#"${leader}"}"
+					;;
+				-vm*)
+					memory_limit="${1#-vm}"
+					;;
+				*)
+					throw "$(printf "ERROR: Invalid memory limit format -- '%s'. Please specify a positive integer value." "${1}")"
+					;;
+				esac
+				if [ -z "${memory_limit}" ]; then
+					if [ -z "${2}" ]; then
+						throw "ERROR: If --memory-limit is specified, an integer limit must be provided."
+					fi
+					case "${2}" in
+					-*)
+						throw "ERROR: If --memory-limit is specified, an integer limit must be provided."
+						;;
+					*)
+						memory_limit="${2}"
+						shift 1
+						;;
+					esac
+				fi
+				awk -v number="${memory_limit}" 'END { exit !( number !~ /[^0-9]/ && number > 0) }' /dev/null || throw "$(printf "ERROR: Invalid memory limit format -- '%s'. Please specify a positive integer value." "${memory_limit}")"
+				;;
 			*)
 				;;
 			esac
