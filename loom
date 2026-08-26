@@ -435,6 +435,7 @@ main() {
 				awk -v number="${parallelism}" 'END { exit !( number !~ /[^0-9]/ && number > 0) }' /dev/null || throw "$(printf "ERROR: Invalid parallelism format -- '%s'. Please specify a positive integer value." "${parallelism}")"
 				;;
 			*)
+				throw "$(printf "ERROR: invalid option -- '%s'" "${1}")"
 				;;
 			esac
 			shift 1
