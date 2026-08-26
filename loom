@@ -211,7 +211,7 @@ main() {
 					output_dir="${1#"${leader}"}"
 					;;
 				-vd*)
-					output_dir="${1#-vw}"
+					output_dir="${1#-vd}"
 					;;
 				*)
 					throw "$(printf "ERROR: Invalid output directory format -- '%s'" "${1}")"
@@ -239,7 +239,7 @@ main() {
 					output_fasta="${1#"${leader}"}"
 					;;
 				-vo*)
-					output_fasta="${1#-vw}"
+					output_fasta="${1#-vo}"
 					;;
 				*)
 					throw "$(printf "ERROR: Invalid output file format -- '%s'" "${1}")"
