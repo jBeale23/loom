@@ -289,7 +289,37 @@ main() {
 				fi
 				awk -v number="${identity_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid identity threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${identity_threshold}")"
 				;;
-			*) ;;
+			-vg)
+				case "${1}" in
+				*=*)
+					leader="${1%%=*}="
+					gap_threshold="${1#"${leader}"}"
+					;;
+				-vg*)
+					gap_threshold="${1#-vg}"
+					;;
+				*)
+					throw "$(printf "ERROR: Invalid gap threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${1}")"
+					;;
+				esac
+				if [ -z "${gap_threshold}" ]; then
+					if [ -z "${2}" ]; then
+						throw "ERROR: If --gap-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+					fi
+					case "${2}" in
+					-*)
+						throw "ERROR: If --gap-threshold is specified, a decimal threshold between 0 and 1 must be provided."
+						;;
+					*)
+						gap_threshold="${2}"
+						shift 1
+						;;
+					esac
+				fi
+				awk -v number="${gap_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid gap threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${gap_threshold}")"
+				;;
+			*)
+				;;
 			esac
 			shift 1
 		elif printf "%s" "${1}" | grep -q -E -- "^(-w)|(--w(o(r(k(-(d(i(r(e(c(t(o(r(y)?)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
