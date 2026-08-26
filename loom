@@ -204,6 +204,34 @@ main() {
 					esac
 				fi
 				;;
+			-vd*)
+				case "${1}" in
+				*=*)
+					leader="${1%%=*}="
+					output_dir="${1#"${leader}"}"
+					;;
+				-vd*)
+					output_dir="${1#-vw}"
+					;;
+				*)
+					throw "$(printf "ERROR: Invalid output directory format -- '%s'" "${1}")"
+					;;
+				esac
+				if [ -z "${output_dir}" ]; then
+					if [ -z "${2}" ]; then
+						throw "ERROR: If --output-directory is specified, an output directory must be provided."
+					fi
+					case "${2}" in
+					-*)
+						throw "ERROR: If --output-directory is specified, an output directory must be provided."
+						;;
+					*)
+						output_dir="${2}"
+						shift 1
+						;;
+					esac
+				fi
+				;;
 			*) ;;
 			esac
 			shift 1
