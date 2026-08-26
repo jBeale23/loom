@@ -232,6 +232,34 @@ main() {
 					esac
 				fi
 				;;
+			-vo*)
+				case "${1}" in
+				*=*)
+					leader="${1%%=*}="
+					output_fasta="${1#"${leader}"}"
+					;;
+				-vo*)
+					output_fasta="${1#-vw}"
+					;;
+				*)
+					throw "$(printf "ERROR: Invalid output file format -- '%s'" "${1}")"
+					;;
+				esac
+				if [ -z "${output_fasta}" ]; then
+					if [ -z "${2}" ]; then
+						throw "ERROR: If --output-file is specified, an output file must be provided."
+					fi
+					case "${2}" in
+					-*)
+						throw "ERROR: If --output-file is specified, an output file must be provided."
+						;;
+					*)
+						output_fasta="${2}"
+						shift 1
+						;;
+					esac
+				fi
+				;;
 			*) ;;
 			esac
 			shift 1
