@@ -171,7 +171,41 @@ main() {
 			shift 1
 			return 0
 		elif printf "%s" "${1}" | grep -q -E -- "^(-v)|(--verb(o(s(e)?)?)?)" 2>/dev/null; then
-			verbose="1"
+			verbose=1
+			shift 1
+		elif printf "%s" "${1}" | grep -q -E -- "^-v[wdoigltmp]" 2>/dev/null; then
+			verbose=1
+			case "${1}" in
+			-vw*)
+				case "${1}" in
+				*=*)
+					leader="${1%%=*}="
+					work_dir="${1#"${leader}"}"
+					;;
+				-vw*)
+					work_dir="${1#-vw}"
+					;;
+				*)
+					throw "$(printf "ERROR: Invalid work directory format -- '%s'" "${1}")"
+					;;
+				esac
+				if [ -z "${work_dir}" ]; then
+					if [ -z "${2}" ]; then
+						throw "ERROR: If --work-directory is specified, a work directory must be provided."
+					fi
+					case "${2}" in
+					-*)
+						throw "ERROR: If --work-directory is specified, a work directory must be provided."
+						;;
+					*)
+						work_dir="${2}"
+						shift 1
+						;;
+					esac
+				fi
+				;;
+			*) ;;
+			esac
 			shift 1
 		elif printf "%s" "${1}" | grep -q -E -- "^(-w)|(--w(o(r(k(-(d(i(r(e(c(t(o(r(y)?)?)?)?)?)?)?)?)?)?)?)?)?)" 2>/dev/null; then
 			case "${1}" in
