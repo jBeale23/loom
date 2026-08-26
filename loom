@@ -347,6 +347,35 @@ main() {
 				fi
 				awk -v number="${length_threshold}" 'END { exit !( number !~ /[^0-9.]/ && number !~ /\..*\./ && number >= 0 && number <= 1) }' /dev/null || throw "$(printf "ERROR: Invalid length threshold format -- '%s'. Please specify a decimal value between 0 and 1." "${length_threshold}")"
 				;;
+			-vt*)
+				case "${1}" in
+				*=*)
+					leader="${1%%=*}="
+					thread_limit="${1#"${leader}"}"
+					;;
+				-vt*)
+					thread_limit="${1#-vt}"
+					;;
+				*)
+					throw "$(printf "ERROR: Invalid thread limit format -- '%s'. Please specify a positive integer value." "${1}")"
+					;;
+				esac
+				if [ -z "${thread_limit}" ]; then
+					if [ -z "${2}" ]; then
+						throw "ERROR: If --thread-limit is specified, an integer limit must be provided."
+					fi
+					case "${2}" in
+					-*)
+						throw "ERROR: If --thread-limit is specified, an integer limit must be provided."
+						;;
+					*)
+						thread_limit="${2}"
+						shift 1
+						;;
+					esac
+				fi
+				awk -v number="${thread_limit}" 'END { exit !( number !~ /[^0-9]/ && number > 0) }' /dev/null || throw "$(printf "ERROR: Invalid thread limit format -- '%s'. Please specify a positive integer value." "${thread_limit}")"
+				;;
 			*)
 				;;
 			esac
